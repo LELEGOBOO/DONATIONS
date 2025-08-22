@@ -46,6 +46,18 @@ function App() {
       console.error("Supabase insert error:", error);
       alert("Kayıt yapılamadı!");
       return;
+      import React from "react";
+import Donations from "./components/Donations";
+
+function App() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <Donations />
+    </div>
+  );
+}
+
+export default App;
     }
 
     // Kullanıcıyı NGO sayfasına yönlendir
