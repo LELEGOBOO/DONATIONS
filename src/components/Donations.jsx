@@ -1,66 +1,86 @@
-// src/components/Donations.jsx
 import React, { useState } from "react";
-import { supabase } from "../lib/supabase";
+import { createClient } from "@supabase/supabase-js";
 
-export default function Donations() {
+// 🔹 .env dosyandan Supabase URL ve KEY çekiyoruz
+const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
+);
+
+function Donations() {
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
-  const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setMessage("");
+    setSuccess(false);
 
     const { error } = await supabase.from("donations").insert([
       {
         name,
-        amount: parseFloat(amount),
+        amount,
+        message,
       },
     ]);
 
+    setLoading(false);
+
     if (error) {
-      console.error(error);
-      setMessage("❌ Donation failed: " + error.message);
+      console.error("Error inserting donation:", error.message);
+      alert("Error: " + error.message);
     } else {
-      setMessage("✅ Donation recorded successfully!");
+      setSuccess(true);
       setName("");
       setAmount("");
+      setMessage("");
     }
-
-    setLoading(false);
   };
 
   return (
-    <div className="max-w-md mx-auto p-4 bg-gray-100 rounded shadow">
-      <h2 className="text-xl font-bold mb-4">Make a Donation</h2>
-      <form onSubmit={handleSubmit} className="space-y-3">
+    <div className="bg-white shadow-lg rounded-lg p-6 w-full max-w-md">
+      <h2 className="text-2xl font-bold mb-4 text-center">Make a Donation</h2>
+      <form onSubmit={handleSubmit} className="space-y-4">
         <input
           type="text"
           placeholder="Your Name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="w-full p-2 border rounded"
           required
+          className="w-full p-2 border rounded"
         />
         <input
           type="number"
-          placeholder="Amount"
+          placeholder="Amount ($)"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          className="w-full p-2 border rounded"
           required
+          className="w-full p-2 border rounded"
+        />
+        <textarea
+          placeholder="Message (optional)"
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          className="w-full p-2 border rounded"
         />
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700"
+          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 disabled:bg-gray-400"
         >
-          {loading ? "Sending..." : "Donate"}
+          {loading ? "Processing..." : "Donate"}
         </button>
       </form>
-      {message && <p className="mt-3 text-sm">{message}</p>}
+      {success && (
+        <p className="text-green-600 mt-4 text-center">
+          ✅ Donation submitted successfully!
+        </p>
+      )}
     </div>
   );
 }
+
+export default Donations;
