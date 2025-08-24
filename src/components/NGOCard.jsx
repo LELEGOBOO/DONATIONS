@@ -1,34 +1,70 @@
-import { supabase } from "../supabaseClient"
+import React, { useState } from "react";
+import { supabase } from "../lib/supabase";
 
-export default function NGOCard({ ngo, user }) {
-  const handleDonate = async () => {
-    const refCode = `${user?.id || "guest"}-${Date.now()}`
+export default function DonationForm({ ngo, user }) {
+  const [amount, setAmount] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
 
-    await supabase.from("donations").insert([
+  async function handleDonate() {
+    const { error } = await supabase.from("donations").insert([
       {
-        ngo_id: ngo.id,
-        user_name: user?.name || "Guest",
-        user_email: user?.email || null,
-        status: "redirected",
-        ref_code: refCode,
+        user_id: user.id,       // auth.uid()
+        ngo_id: ngo.id,         // seçilen NGO
+        amount: amount,
+        full_name: fullName,
+        phone: phone,
+        user_email: user.email, // email sadece tek kolon
       },
-    ])
+    ]);
 
-    const donationUrl = `${ngo.donation_link}?utm_source=whole4world&utm_medium=referral&utm_campaign=donation&ref=${refCode}`
-    window.open(donationUrl, "_blank")
+    if (error) {
+      console.error(error);
+    } else {
+      alert("Donation recorded successfully!");
+      setAmount("");
+      setFullName("");
+      setPhone("");
+    }
   }
 
   return (
-    <div className="border rounded-lg p-4 shadow-md flex flex-col items-center bg-blue-50">
-      <img src={ngo.logo_url} alt={ngo.name} className="w-24 h-24 mb-2" />
-      <h2 className="text-lg font-bold text-blue-700">{ngo.name}</h2>
-      <p className="text-sm text-gray-600">{ngo.description}</p>
+    <div className="p-4 border rounded shadow bg-white">
+      <h2 className="font-bold mb-2">{ngo.name}</h2>
+      <input
+        type="text"
+        placeholder="Full Name"
+        value={fullName}
+        onChange={(e) => setFullName(e.target.value)}
+        className="w-full p-2 mb-2 border rounded"
+      />
+      <input
+        type="email"
+        placeholder="Your Email"
+        value={user.email}
+        disabled
+        className="w-full p-2 mb-2 border rounded bg-gray-100"
+      />
+      <input
+        type="text"
+        placeholder="Phone Number"
+        value={phone}
+        onChange={(e) => setPhone(e.target.value)}
+        className="w-full p-2 mb-2 border rounded"
+      />
+      <input
+        type="number"
+        placeholder="Amount"
+        value={amount}
+        onChange={(e) => setAmount(e.target.value)}
+        className="w-full p-2 mb-2 border rounded"
+      />
       <button
         onClick={handleDonate}
-        className="mt-3 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+        className="bg-green-600 text-white px-4 py-2 rounded"
       >
         Donate
       </button>
     </div>
-  )
+  );
 }
